@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy[asyncio]
+pydantic
+passlib[bcrypt]
+pyjwt
+aiosqlite
+transformers[torch]
+pandas
+tfrecord

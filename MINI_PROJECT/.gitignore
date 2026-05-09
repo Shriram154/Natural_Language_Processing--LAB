@@ -1,0 +1,62 @@
+# Python / Backend
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database (NEVER upload user data or passwords!)
+code_review_ai.db
+*.sqlite3
+
+# Node / Frontend
+frontend/node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment Variables / Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Project specific logs and scratch files
+backend/output.txt
+backend/scratch.py
+logs/
+*.log
+
+# Datasets / Large Files (GitHub blocks files > 100MB)
+datasets/
+*.jsonl
+*.csv
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
