@@ -2,8 +2,8 @@ import os
 import requests
 import json
 
-# Use a more stable and powerful model
-API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-7B-Instruct"
+# Use a model that is guaranteed to be available on the Serverless API
+API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct"
 
 def analyze_code_with_ai(code, language):
     """
