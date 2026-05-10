@@ -1,11 +1,9 @@
 fastapi
 uvicorn
-sqlalchemy[asyncio]
+sqlalchemy
 pydantic
 passlib[bcrypt]
 pyjwt
 aiosqlite
-transformers[torch]
+requests
 email-validator
-pandas
-tfrecord
