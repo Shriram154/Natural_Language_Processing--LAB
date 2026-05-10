@@ -2,10 +2,11 @@ import os
 import requests
 import json
 
-# Use a model that is absolutely guaranteed to be online
-API_URL = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct"
+# Use a model that is high-priority on the inference API
+API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-7B-Instruct"
 
 def analyze_code_with_ai(code, language):
+    print(f"DEBUG: Attempting to hit URL: {API_URL}")
     """
     Sends code to Hugging Face Inference API for analysis.
     """
