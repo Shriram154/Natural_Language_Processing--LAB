@@ -2,8 +2,8 @@ import os
 import requests
 import json
 
-# Use a model that is guaranteed to be available on the Serverless API
-API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct"
+# Use a model that is ultra-stable on the free Inference API
+API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-1.5B-Instruct"
 
 def analyze_code_with_ai(code, language):
     """
