@@ -2,8 +2,8 @@ import os
 import requests
 import json
 
-# Use a model that is ultra-stable on the free Inference API
-API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-1.5B-Instruct"
+# Use a model that is absolutely guaranteed to be online
+API_URL = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct"
 
 def analyze_code_with_ai(code, language):
     """
