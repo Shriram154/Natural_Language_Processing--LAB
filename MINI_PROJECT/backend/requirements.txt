@@ -7,3 +7,6 @@ pyjwt
 aiosqlite
 requests
 email-validator
+torch
+transformers
+accelerate

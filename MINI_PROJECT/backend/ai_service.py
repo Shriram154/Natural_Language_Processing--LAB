@@ -1,112 +1,75 @@
-import os
-import requests
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import json
 
-# Use a model that is high-priority on the inference API
-API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-7B-Instruct"
+# Back to the fast 0.5B model
+MODEL_NAME = "Qwen/Qwen2.5-Coder-0.5B-Instruct"
+
+# Load the model and tokenizer
+print(f"Loading Fast AI model ({MODEL_NAME}). Please wait...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype="auto", device_map="auto")
+# Fix the pad token warning
+tokenizer.pad_token = tokenizer.eos_token
+print("AI Model loaded successfully!")
 
 def analyze_code_with_ai(code, language):
-    print(f"DEBUG: Attempting to hit URL: {API_URL}")
     """
-    Sends code to Hugging Face Inference API for analysis.
+    Analyzes code locally using 0.5B model with few-shot examples.
     """
-    headers = {}
-    hf_token = os.getenv("HF_TOKEN")
-    if hf_token:
-        # Ensure token is cleaned of any accidental spaces
-        headers["Authorization"] = f"Bearer {hf_token.strip()}"
-    
     prompt = f"""
-    You are a professional senior software engineer. Analyze the following {language} code.
-    Provide a response in EXACTLY this JSON format:
+    Analyze the following {language} code. 
+    You MUST follow this exact format:
+
+    EXAMPLE RESPONSE:
     {{
-        "general_explanation": "brief overview",
-        "time_complexity_original": "O(?)",
-        "line_by_line_explanation": "step by step",
-        "optimized_code": "improved code",
-        "time_complexity_optimized": "O(?)",
-        "optimization_explanation": "why it is better"
+        "general_explanation": "This is a recursive function.",
+        "time_complexity_original": "O(2^n)",
+        "line_by_line_explanation": "The function calls itself twice.",
+        "optimized_code": "def fib(n):\\n    a, b = 0, 1\\n    for _ in range(n): a, b = b, a + b\\n    return a",
+        "time_complexity_optimized": "O(n)",
+        "optimization_explanation": "Using iteration is much faster than recursion."
     }}
 
-    Code to analyze:
+    REAL CODE TO ANALYZE:
     {code}
     """
 
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 1000,
-            "return_full_text": False
-        }
-    }
+    messages = [
+        {"role": "system", "content": "You are a senior dev. You only output valid JSON. No conversational text."},
+        {"role": "user", "content": prompt}
+    ]
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
 
+    # Fast generation settings
+    generated_ids = model.generate(
+        model_inputs.input_ids, 
+        max_new_tokens=512, 
+        do_sample=False,
+        pad_token_id=tokenizer.pad_token_id
+    )
+    generated_ids = [
+        output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+    ]
+
+    raw_text = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+    # Cleaner Logic
     try:
-        print(f"Sending request to HF API for {language} code...")
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
-        
-        # Log status for debugging in Render
-        print(f"HF API Status: {response.status_code}")
-        
-        if response.status_code == 503:
-            return {
-                "general_explanation": "The AI model is currently loading on Hugging Face servers.",
-                "time_complexity_original": "N/A",
-                "line_by_line_explanation": "Please wait about 30-60 seconds for the model to wake up and try again.",
-                "optimized_code": "Model is warming up...",
-                "time_complexity_optimized": "N/A",
-                "optimization_explanation": "Hugging Face free tier puts models to sleep when not in use. It will be ready shortly."
-            }
-            
-        if response.status_code != 200:
-            print(f"HF API Error Response: {response.text}")
-            return {
-                "general_explanation": "The AI service returned an error.",
-                "time_complexity_original": "N/A",
-                "line_by_line_explanation": "Please check your HF_TOKEN in Render settings.",
-                "optimized_code": "Error: API Status " + str(response.status_code),
-                "time_complexity_optimized": "N/A",
-                "optimization_explanation": "The Hugging Face API is either down or the token is invalid."
-            }
-
-        result = response.json()
-        
-        # Handle list response from some HF models
-        if isinstance(result, list):
-            raw_text = result[0].get("generated_text", "")
-        else:
-            raw_text = result.get("generated_text", "")
-
-        if not raw_text:
-            print("HF API returned empty generated_text")
-            return {"error": "AI generated an empty response."}
-
-        # Try to find JSON in the response
-        try:
-            if "{" in raw_text:
-                start = raw_text.find("{")
-                end = raw_text.rfind("}") + 1
-                json_data = json.loads(raw_text[start:end])
-                return json_data
-        except Exception as json_err:
-            print(f"JSON Parse Error: {json_err}. Raw text: {raw_text[:200]}")
-        
-        # Fallback if JSON fails
-        return {
-            "general_explanation": "Code analyzed successfully, but formatting was slightly off.",
-            "time_complexity_original": "See explanation",
-            "line_by_line_explanation": raw_text[:500],
-            "optimized_code": "Check explanation for details",
-            "time_complexity_optimized": "N/A",
-            "optimization_explanation": "AI response format error."
-        }
-
+        if "{" in raw_text:
+            start = raw_text.find("{")
+            end = raw_text.rfind("}") + 1
+            data = json.loads(raw_text[start:end])
+            return data
     except Exception as e:
-        print(f"API Error Exception: {e}")
-        return {
-            "general_explanation": "Could not connect to AI service.",
-            "time_complexity_original": "N/A",
-            "line_by_line_explanation": str(e),
-            "optimized_code": "Connection Error",
-            "time_complexity_optimized": "N/A",
-            "optimization_explanation": "Check your internet connection or backend logs."
-        }
+        print(f"Format Error: {e}")
+    
+    return {
+        "general_explanation": "AI generated a response.",
+        "time_complexity_original": "N/A",
+        "line_by_line_explanation": "Formatting issue with the small model.",
+        "optimized_code": raw_text,
+        "time_complexity_optimized": "N/A",
+        "optimization_explanation": "Raw AI output shown above."
+    }

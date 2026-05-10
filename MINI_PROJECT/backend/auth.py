@@ -4,8 +4,8 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
 
-from database import get_db
-import models, schemas
+from .database import get_db
+from . import models, schemas
 
 SECRET_KEY = "super_secret_for_this_mini_project"
 ALGORITHM = "HS256"

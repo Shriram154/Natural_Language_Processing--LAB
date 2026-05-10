@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
 
-from database import engine, Base, get_db
-from auth import router as auth_router
-from api import router as api_router
+from .database import engine, Base, get_db
+from .auth import router as auth_router
+from .api import router as api_router
 
 app = FastAPI(title="Code Review Chatbot API")
 
